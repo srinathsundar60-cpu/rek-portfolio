@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login — rek.</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#0B0B0B" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico" />
+  <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+
+  <!-- Fonts (preconnect first) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+
+  <!-- Admin Styles -->
+  <link rel="stylesheet" href="/css/admin.css" />
+
+  <style>
+    /* Background particles / geometric accent */
+    .login-bg {
+      position: fixed;
+      inset: 0;
+      background: var(--black);
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .login-bg::before {
+      content: '';
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(242,140,56,.12) 0%, transparent 70%);
+      top: -150px;
+      right: -150px;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .login-bg::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(242,140,56,.07) 0%, transparent 70%);
+      bottom: -100px;
+      left: -100px;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .login-page { position: relative; z-index: 1; }
+
+    .login-card {
+      animation: cardIn .5s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(24px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Error message below form fields */
+    .field-error {
+      font-size: .72rem;
+      color: #e53935;
+      margin-top: .25rem;
+      display: none;
+    }
+
+    .field-error.show { display: block; }
+  </style>
+</head>
+
+<body>
+  <!-- Background accent -->
+  <div class="login-bg" aria-hidden="true"></div>
+
+  <!-- Toast container -->
+  <div id="toastContainer"></div>
+
+  <div class="login-page">
+    <div class="login-card">
+      <!-- Logo -->
+      <div class="login-logo">rek<span>.</span></div>
+      <p class="login-subtitle">Admin Portal — Sign in to continue</p>
+
+      <!-- Login Form -->
+      <form class="login-form" id="loginForm" novalidate>
+        <div class="form-group">
+          <label for="adminEmail">Email</label>
+          <input
+            type="email"
+            id="adminEmail"
+            name="email"
+            placeholder="admin@example.com"
+            autocomplete="email"
+            required
+          />
+          <span class="field-error" id="emailError">Please enter a valid email address.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="adminPassword">Password</label>
+          <input
+            type="password"
+            id="adminPassword"
+            name="password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+          />
+          <span class="field-error" id="passwordError">Password cannot be empty.</span>
+        </div>
+
+        <button type="submit" class="btn-login" id="loginBtn">
+          Sign In →
+        </button>
+      </form>
+
+      <!-- Back link -->
+      <a href="/" class="login-back">← Back to site</a>
+    </div>
+  </div>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/js/config.js"></script>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ── Init Supabase ── */
+      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      const form      = document.getElementById('loginForm');
+      const emailEl   = document.getElementById('adminEmail');
+      const passEl    = document.getElementById('adminPassword');
+      const btnEl     = document.getElementById('loginBtn');
+      const emailErr  = document.getElementById('emailError');
+      const passErr   = document.getElementById('passwordError');
+
+      /* ── If already logged in, redirect straight to dashboard ── */
+      sb.auth.getSession().then(({ data: { session } }) => {
+        if (session) window.location.replace('/admin/dashboard.html');
+      });
+
+      /* ── Toast helper (standalone — no admin-auth.js dependency) ── */
+      function showToast(msg, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const icons = { info: 'ℹ️', success: '✅', error: '❌' };
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<span class="toast-icon">${icons[type]}</span><span class="toast-msg">${msg}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => {
+          toast.classList.add('hiding');
+          toast.addEventListener('animationend', () => toast.remove(), { once: true });
+        }, 4000);
+      }
+
+      /* ── Form submission ── */
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const email    = emailEl.value.trim();
+        const password = passEl.value;
+
+        /* Client-side validation */
+        let valid = true;
+
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          emailErr.classList.add('show');
+          emailEl.focus();
+          valid = false;
+        } else {
+          emailErr.classList.remove('show');
+        }
+
+        if (!password) {
+          passErr.classList.add('show');
+          if (valid) passEl.focus();
+          valid = false;
+        } else {
+          passErr.classList.remove('show');
+        }
+
+        if (!valid) return;
+
+        /* Loading state */
+        btnEl.disabled = true;
+        btnEl.classList.add('loading');
+        btnEl.textContent = '';
+
+        try {
+          const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+          if (error) throw error;
+
+          if (data.session) {
+            showToast('Login successful! Redirecting…', 'success');
+            setTimeout(() => window.location.replace('/admin/dashboard.html'), 800);
+          }
+        } catch (err) {
+          btnEl.disabled = false;
+          btnEl.classList.remove('loading');
+          btnEl.textContent = 'Sign In →';
+
+          const msg = err.message || 'Login failed. Please check your credentials.';
+          showToast(msg, 'error');
+        }
+      });
+
+      /* ── Clear field errors on input ── */
+      emailEl.addEventListener('input', () => emailErr.classList.remove('show'));
+      passEl.addEventListener('input', () => passErr.classList.remove('show'));
+    })();
+  </script>
+</body>
+</html>

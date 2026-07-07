@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — rek.</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#0B0B0B" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico" />
+  <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+
+  <!-- Admin Styles -->
+  <link rel="stylesheet" href="/css/admin.css" />
+
+  <style>
+    /* ── Tab panel visibility ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Add product form layout ── */
+    .form-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1.25rem;
+    }
+
+    /* ── Product count label ── */
+    .products-count-label {
+      font-size: .78rem;
+      color: var(--grey-text);
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+
+    /* ── Section divider ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: .75rem;
+    }
+
+    .section-header h3 {
+      font-family: var(--font-head);
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    /* ── Visibility section image cards ── */
+    .visibility-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+
+    .vis-card {
+      background: var(--white);
+      border: 1px solid var(--grey-mid);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform .3s var(--ease), box-shadow .3s;
+      cursor: pointer;
+    }
+
+    .vis-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 28px rgba(0,0,0,.08);
+    }
+
+    .vis-card-img {
+      aspect-ratio: 16/9;
+      overflow: hidden;
+      background: var(--grey-bg);
+    }
+
+    .vis-card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform .4s var(--ease);
+    }
+
+    .vis-card:hover .vis-card-img img { transform: scale(1.06); }
+
+    .vis-card-body {
+      padding: .85rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .5rem;
+    }
+
+    .vis-card-title {
+      font-size: .85rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+
+    /* ── Edit product modal fields ── */
+    .modal-form { display: flex; flex-direction: column; gap: .85rem; }
+  </style>
+</head>
+
+<body>
+  <!-- Toast container -->
+  <div id="toastContainer"></div>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="admin-layout">
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="sidebar-logo">
+        <a href="/">rek<span>.</span> <span class="sidebar-badge">Admin</span></a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-label">Management</div>
+        <a href="#" class="active" data-tab="products" id="navProducts">
+          <span class="nav-icon">📦</span> Products
+        </a>
+        <a href="#" data-tab="access" id="navAccess">
+          <span class="nav-icon">👥</span> Access Portal
+        </a>
+        <a href="#" data-tab="visibility" id="navVisibility">
+          <span class="nav-icon">👁️</span> Visibility
+        </a>
+
+        <div class="sidebar-section-label" style="margin-top:1rem;">Site</div>
+        <a href="/" target="_blank" rel="noopener">
+          <span class="nav-icon">🌐</span> View Public Site
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user-info" id="currentUserEmail">Loading…</div>
+        <button class="btn-logout" id="logoutBtn">
+          <span>🚪</span> Sign Out
+        </button>
+      </div>
+    </aside>
+
+    <!-- ── MAIN ── -->
+    <main class="admin-main">
+
+      <!-- Top Header -->
+      <header class="admin-header">
+        <div class="admin-header-left">
+          <button class="btn-sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
+          <div class="admin-page-title" id="pageTitle">Products</div>
+        </div>
+        <div class="admin-header-actions">
+          <a href="/" target="_blank" rel="noopener" class="btn-secondary" style="font-size:.8rem;padding:.5rem 1rem;">
+            🌐 View Site
+          </a>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="admin-content">
+
+        <!-- ── Summary Stats ── -->
+        <div class="admin-stats">
+          <div class="stat-card">
+            <div class="stat-label">Total Projects</div>
+            <div class="stat-value" id="statTotal">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Visible</div>
+            <div class="stat-value" id="statVisible">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Hidden</div>
+            <div class="stat-value" id="statHidden">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Team Members</div>
+            <div class="stat-value" id="statMembers">—</div>
+          </div>
+        </div>
+
+        <!-- ════════════════════════════════════
+             TAB: PRODUCTS
+        ════════════════════════════════════ -->
+        <div class="tab-panel active" id="panelProducts">
+
+          <!-- Add Product Form -->
+          <div class="admin-card">
+            <div class="admin-card-title">
+              <span class="title-icon">➕</span>
+              Add New Project
+            </div>
+
+            <form id="addProductForm" novalidate>
+              <div class="form-grid">
+
+                <!-- Image Upload -->
+                <div class="form-group full-width">
+                  <label>Project Image <span style="color:var(--orange)">*</span></label>
+
+                  <!-- Drop zone -->
+                  <div class="upload-zone" id="uploadZone">
+                    <input
+                      type="file"
+                      id="productImageInput"
+                      accept="image/jpeg,image/png,image/webp"
+                      aria-label="Upload project image"
+                    />
+                    <div class="upload-icon">🖼️</div>
+                    <p>Drag & drop or <strong>click to upload</strong></p>
+                    <p class="upload-hint">16:9 ratio · JPG, PNG, WebP · Max 2 MB</p>
+                  </div>
+
+                  <!-- Preview -->
+                  <div class="upload-preview" id="uploadPreview">
+                    <img id="previewImg" src="" alt="Preview" />
+                    <button type="button" class="remove-preview" id="removePreview" aria-label="Remove image">✕</button>
+                  </div>
+
+                  <p class="form-hint" id="imageError" style="color:var(--danger);display:none;"></p>
+                </div>
+
+                <!-- Title -->
+                <div class="form-group">
+                  <label for="productTitle">Title <span style="color:var(--orange)">*</span></label>
+                  <input
+                    type="text"
+                    id="productTitle"
+                    placeholder="e.g. Chandran Mess Website"
+                    maxlength="100"
+                    required
+                  />
+                  <div class="char-count" id="titleCount">0 / 100</div>
+                </div>
+
+                <!-- Product URL -->
+                <div class="form-group">
+                  <label for="productUrl">Product URL <span style="color:var(--orange)">*</span></label>
+                  <input
+                    type="url"
+                    id="productUrl"
+                    placeholder="https://example.com"
+                    required
+                  />
+                </div>
+
+                <!-- Description -->
+                <div class="form-group full-width">
+                  <label for="productDesc">Description <span style="color:var(--orange)">*</span></label>
+                  <textarea
+                    id="productDesc"
+                    placeholder="A short description of the project (1–2 lines)…"
+                    rows="2"
+                    style="min-height:70px;resize:none;"
+                    required
+                  ></textarea>
+                  <p class="form-hint">Keep it to 1–2 lines for the best display on the public site.</p>
+                </div>
+
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-primary" id="addProductBtn">
+                  ➕ Add Project
+                </button>
+                <span id="addProductStatus" style="font-size:.82rem;color:var(--grey-text);"></span>
+              </div>
+            </form>
+          </div>
+
+          <!-- Product List -->
+          <div class="admin-card">
+            <div class="section-header">
+              <div class="admin-card-title" style="margin-bottom:0;">
+                <span class="title-icon">📋</span>
+                All Projects
+              </div>
+              <button class="btn-secondary" id="refreshProductsBtn" style="font-size:.8rem;padding:.5rem 1rem;">
+                🔄 Refresh
+              </button>
+            </div>
+
+            <div class="products-count-label" id="productsCountLabel"></div>
+            <div id="productsListContainer">
+              <div class="loading-spinner"></div>
+            </div>
+          </div>
+
+        </div><!-- /panelProducts -->
+
+
+        <!-- ════════════════════════════════════
+             TAB: ACCESS PORTAL
+        ════════════════════════════════════ -->
+        <div class="tab-panel" id="panelAccess">
+
+          <!-- Add Admin Profile -->
+          <div class="admin-card">
+            <div class="admin-card-title">
+              <span class="title-icon">👤</span>
+              Register Admin Profile
+            </div>
+
+            <div style="padding:.75rem 1rem;background:var(--orange-dim);border-radius:10px;border:1px solid rgba(242,140,56,.2);margin-bottom:1.25rem;font-size:.82rem;color:var(--black);line-height:1.6;">
+              <strong>ℹ️ How it works:</strong> To give someone admin access, first create their account in the
+              <a href="https://supabase.com/dashboard" target="_blank" rel="noopener" style="color:var(--orange);text-decoration:underline;">Supabase Dashboard</a>
+              (Authentication → Users → Add user). Then register their profile here using the same email address.
+            </div>
+
+            <form id="addMemberForm" novalidate>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="memberName">Full Name <span style="color:var(--orange)">*</span></label>
+                  <input type="text" id="memberName" placeholder="Jane Doe" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="memberEmail">Email (must match Supabase Auth) <span style="color:var(--orange)">*</span></label>
+                  <input type="email" id="memberEmail" placeholder="jane@example.com" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="memberRole">Role</label>
+                  <select id="memberRole">
+                    <option value="admin">Admin</option>
+                    <option value="editor">Editor</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-primary" id="addMemberBtn">
+                  👤 Register Profile
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Members List -->
+          <div class="admin-card">
+            <div class="section-header">
+              <div class="admin-card-title" style="margin-bottom:0;">
+                <span class="title-icon">👥</span>
+                Admin Members
+              </div>
+              <button class="btn-secondary" id="refreshMembersBtn" style="font-size:.8rem;padding:.5rem 1rem;">
+                🔄 Refresh
+              </button>
+            </div>
+
+            <div id="membersListContainer">
+              <div class="loading-spinner"></div>
+            </div>
+          </div>
+
+        </div><!-- /panelAccess -->
+
+
+        <!-- ════════════════════════════════════
+             TAB: VISIBILITY
+        ════════════════════════════════════ -->
+        <div class="tab-panel" id="panelVisibility">
+
+          <div class="admin-card">
+            <div class="section-header">
+              <div class="admin-card-title" style="margin-bottom:0;">
+                <span class="title-icon">👁️</span>
+                Project Visibility
+              </div>
+              <button class="btn-secondary" id="refreshVisibilityBtn" style="font-size:.8rem;padding:.5rem 1rem;">
+                🔄 Refresh
+              </button>
+            </div>
+
+            <p style="font-size:.82rem;color:var(--grey-text);margin-bottom:1.25rem;line-height:1.6;">
+              Toggle to control which projects appear on the public website. Changes take effect immediately.
+            </p>
+
+            <div id="visibilityGridContainer">
+              <div class="loading-spinner"></div>
+            </div>
+          </div>
+
+        </div><!-- /panelVisibility -->
+
+      </div><!-- /admin-content -->
+    </main>
+  </div><!-- /admin-layout -->
+
+
+  <!-- ── EDIT PRODUCT MODAL ── -->
+  <div class="admin-modal-overlay" id="editProductModal" role="dialog" aria-modal="true" aria-label="Edit product">
+    <div class="admin-modal">
+      <div class="modal-header">
+        <div class="modal-title">✏️ Edit Project</div>
+        <button class="modal-close" id="closeEditModal" aria-label="Close">✕</button>
+      </div>
+
+      <!-- Product detail / edit -->
+      <img id="editProductImg" class="detail-image" src="" alt="" />
+
+      <div class="detail-meta" id="editDetailMeta"></div>
+
+      <div class="admin-section-sep"></div>
+
+      <form class="modal-form" id="editProductForm" novalidate>
+        <input type="hidden" id="editProductId" />
+
+        <div class="form-group">
+          <label for="editTitle">Title</label>
+          <input type="text" id="editTitle" maxlength="100" required />
+          <div class="char-count" id="editTitleCount">0 / 100</div>
+        </div>
+
+        <div class="form-group">
+          <label for="editUrl">Product URL</label>
+          <input type="url" id="editUrl" required />
+        </div>
+
+        <div class="form-group">
+          <label for="editDesc">Description</label>
+          <textarea id="editDesc" rows="2" style="min-height:70px;resize:none;" required></textarea>
+        </div>
+
+        <!-- New image upload for edit -->
+        <div class="form-group">
+          <label>Replace Image (optional)</label>
+          <div class="upload-zone" id="editUploadZone" style="padding:1rem;">
+            <input type="file" id="editImageInput" accept="image/jpeg,image/png,image/webp" aria-label="Replace image" />
+            <p style="font-size:.8rem;">Click to choose a new image</p>
+            <p class="upload-hint">16:9 · JPG/PNG/WebP · Max 2 MB</p>
+          </div>
+          <p class="form-hint" id="editImageError" style="color:var(--danger);display:none;"></p>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" id="saveEditBtn">💾 Save Changes</button>
+          <button type="button" class="btn-secondary" id="cancelEditBtn">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── EDIT MEMBER MODAL ── -->
+  <div class="admin-modal-overlay" id="editMemberModal" role="dialog" aria-modal="true" aria-label="Edit member">
+    <div class="admin-modal">
+      <div class="modal-header">
+        <div class="modal-title">✏️ Edit Member</div>
+        <button class="modal-close" id="closeEditMemberModal" aria-label="Close">✕</button>
+      </div>
+      <form class="modal-form" id="editMemberForm" novalidate>
+        <input type="hidden" id="editMemberId" />
+        <div class="form-group">
+          <label for="editMemberName">Full Name</label>
+          <input type="text" id="editMemberName" required />
+        </div>
+        <div class="form-group">
+          <label for="editMemberRole">Role</label>
+          <select id="editMemberRole">
+            <option value="admin">Admin</option>
+            <option value="editor">Editor</option>
+            <option value="viewer">Viewer</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">💾 Save</button>
+          <button type="button" class="btn-secondary" id="cancelEditMemberBtn">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ── SCRIPTS ── -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="/js/config.js"></script>
+  <script src="/js/admin-auth.js"></script>
+  <script src="/js/admin-products.js"></script>
+  <script src="/js/admin-access.js"></script>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* ── Short aliases ── */
+    const { requireAuth, adminLogout, showToast, escapeHtml, getCurrentUser } = window.adminAuth;
+    const AP = window.adminProducts;
+    const AA = window.adminAccess;
+
+    /* ── State ── */
+    let allProducts = [];
+    let allMembers  = [];
+    let activeTab   = 'products';
+    let editingFile = null; // File for edit modal new image
+
+    /* ── Guard ── */
+    requireAuth().then(user => {
+      if (!user) return;
+
+      /* Show current user email in sidebar */
+      document.getElementById('currentUserEmail').textContent = user.email;
+
+      /* Init everything */
+      initTabs();
+      initSidebar();
+      initLogout();
+      loadProducts();
+      loadMembers();
+
+      /* Character count for add form */
+      initCharCount('productTitle', 'titleCount', 100);
+      initCharCount('editTitle', 'editTitleCount', 100);
+
+      /* Upload zone drag & drop */
+      initUploadZone('uploadZone', 'productImageInput');
+      initUploadZone('editUploadZone', 'editImageInput');
+    });
+
+    /* ─────────────────────────────────────
+       TABS
+    ───────────────────────────────────── */
+    function initTabs() {
+      const navLinks  = document.querySelectorAll('.sidebar-nav a[data-tab]');
+      const panels    = document.querySelectorAll('.tab-panel');
+      const pageTitle = document.getElementById('pageTitle');
+
+      const titles = { products: 'Products', access: 'Access Portal', visibility: 'Visibility' };
+
+      navLinks.forEach(link => {
+        link.addEventListener('click', e => {
+          e.preventDefault();
+          const tab = link.dataset.tab;
+          if (tab === activeTab) return;
+
+          activeTab = tab;
+
+          navLinks.forEach(l => l.classList.toggle('active', l.dataset.tab === tab));
+          panels.forEach(p => p.classList.toggle('active', p.id === `panel${capitalize(tab)}`));
+          pageTitle.textContent = titles[tab] || tab;
+
+          /* Lazy load visibility grid */
+          if (tab === 'visibility') renderVisibilityGrid();
+
+          /* Close sidebar on mobile after navigation */
+          closeSidebar();
+        });
+      });
+    }
+
+    /* ─────────────────────────────────────
+       SIDEBAR (MOBILE)
+    ───────────────────────────────────── */
+    function initSidebar() {
+      const toggle  = document.getElementById('sidebarToggle');
+      const sidebar = document.getElementById('adminSidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+
+      toggle.addEventListener('click', () => {
+        const isOpen = sidebar.classList.toggle('open');
+        overlay.classList.toggle('open', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      });
+
+      overlay.addEventListener('click', closeSidebar);
+    }
+
+    function closeSidebar() {
+      document.getElementById('adminSidebar').classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    /* ─────────────────────────────────────
+       LOGOUT
+    ───────────────────────────────────── */
+    function initLogout() {
+      document.getElementById('logoutBtn').addEventListener('click', async () => {
+        showToast('Signing out…', 'info');
+        await adminLogout();
+      });
+    }
+
+    /* ─────────────────────────────────────
+       STATS
+    ───────────────────────────────────── */
+    function updateStats() {
+      const total   = allProducts.length;
+      const visible = allProducts.filter(p => p.visible).length;
+      document.getElementById('statTotal').textContent   = total;
+      document.getElementById('statVisible').textContent = visible;
+      document.getElementById('statHidden').textContent  = total - visible;
+      document.getElementById('statMembers').textContent = allMembers.length;
+    }
+
+    /* ─────────────────────────────────────
+       PRODUCTS TAB
+    ───────────────────────────────────── */
+    async function loadProducts() {
+      try {
+        allProducts = await AP.loadAllProducts();
+        renderProductsList();
+        updateStats();
+      } catch (err) {
+        showToast('Failed to load products: ' + err.message, 'error');
+      }
+    }
+
+    function renderProductsList() {
+      const container = document.getElementById('productsListContainer');
+      const countLabel = document.getElementById('productsCountLabel');
+
+      countLabel.textContent = `${allProducts.length} project${allProducts.length !== 1 ? 's' : ''} total`;
+
+      if (!allProducts.length) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>No projects yet. Add your first project above.</p></div>`;
+        return;
+      }
+
+      const list = document.createElement('div');
+      list.className = 'products-list';
+
+      allProducts.forEach(p => {
+        const card = AP.buildProductCard(p);
+
+        /* Edit button */
+        card.querySelector('.edit-product').addEventListener('click', () => openEditModal(p));
+
+        /* Delete button */
+        card.querySelector('.delete-product').addEventListener('click', async () => {
+          if (!confirm(`Delete "${p.title}"? This cannot be undone.`)) return;
+          try {
+            await AP.deleteProduct(p.id, p.image_url);
+            showToast(`"${p.title}" deleted.`, 'success');
+            await loadProducts();
+          } catch (err) {
+            showToast('Delete failed: ' + err.message, 'error');
+          }
+        });
+
+        list.appendChild(card);
+      });
+
+      container.innerHTML = '';
+      container.appendChild(list);
+    }
+
+    /* Refresh button */
+    document.getElementById('refreshProductsBtn').addEventListener('click', loadProducts);
+
+    /* ── ADD PRODUCT FORM ── */
+    const addForm = document.getElementById('addProductForm');
+    let selectedFile = null;
+
+    /* File input change */
+    document.getElementById('productImageInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      await handleFileSelect(file, 'uploadZone', 'uploadPreview', 'previewImg', 'imageError');
+      selectedFile = file;
+    });
+
+    /* Remove preview */
+    document.getElementById('removePreview').addEventListener('click', () => {
+      selectedFile = null;
+      document.getElementById('uploadPreview').style.display = 'none';
+      document.getElementById('uploadZone').style.display = 'flex';
+      document.getElementById('productImageInput').value = '';
+      document.getElementById('imageError').style.display = 'none';
+    });
+
+    addForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const title    = document.getElementById('productTitle').value.trim();
+      const desc     = document.getElementById('productDesc').value.trim();
+      const url      = document.getElementById('productUrl').value.trim();
+      const btn      = document.getElementById('addProductBtn');
+      const statusEl = document.getElementById('addProductStatus');
+
+      /* Validate */
+      if (!selectedFile) { showToast('Please select a project image.', 'error'); return; }
+      if (!title)  { showToast('Project title is required.', 'error'); return; }
+      if (!desc)   { showToast('Project description is required.', 'error'); return; }
+      if (!isValidUrl(url)) { showToast('Please enter a valid URL.', 'error'); return; }
+
+      btn.disabled = true;
+      btn.classList.add('loading');
+      statusEl.textContent = 'Uploading image…';
+
+      try {
+        /* Validate image */
+        const validation = await AP.validateImage(selectedFile);
+        if (!validation.ok) { showToast(validation.error, 'error'); return; }
+
+        statusEl.textContent = 'Saving project…';
+        const imageUrl = await AP.uploadImage(selectedFile);
+        await AP.addProduct({ title, description: desc, image_url: imageUrl, product_url: url });
+
+        showToast(`"${title}" added successfully!`, 'success');
+        addForm.reset();
+        selectedFile = null;
+        document.getElementById('uploadPreview').style.display = 'none';
+        document.getElementById('uploadZone').style.display = 'flex';
+        document.getElementById('imageError').style.display = 'none';
+        statusEl.textContent = '';
+        document.getElementById('titleCount').textContent = '0 / 100';
+
+        await loadProducts();
+      } catch (err) {
+        showToast('Failed to add project: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        statusEl.textContent = '';
+      }
+    });
+
+    /* ── EDIT PRODUCT MODAL ── */
+    let editingProductData = null;
+
+    function openEditModal(product) {
+      editingProductData = product;
+      editingFile = null;
+
+      document.getElementById('editProductId').value = product.id;
+      document.getElementById('editTitle').value     = product.title;
+      document.getElementById('editDesc').value      = product.description;
+      document.getElementById('editUrl').value       = product.product_url;
+      document.getElementById('editProductImg').src  = product.image_url;
+
+      /* Update char count */
+      document.getElementById('editTitleCount').textContent = `${product.title.length} / 100`;
+
+      /* Detail metadata */
+      const created = product.created_at
+        ? new Date(product.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
+        : '—';
+      const updated = product.updated_at && product.updated_at !== product.created_at
+        ? new Date(product.updated_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
+        : '—';
+
+      document.getElementById('editDetailMeta').innerHTML = `
+        <div class="detail-meta-row">
+          <span class="meta-key">Product URL</span>
+          <span class="meta-val"><a href="${escapeHtml(product.product_url)}" target="_blank" style="color:var(--orange);">${escapeHtml(product.product_url)}</a></span>
+        </div>
+        <div class="detail-meta-row">
+          <span class="meta-key">Upload Date</span>
+          <span class="meta-val">${created}</span>
+        </div>
+        <div class="detail-meta-row">
+          <span class="meta-key">Last Updated</span>
+          <span class="meta-val">${updated}</span>
+        </div>
+        <div class="detail-meta-row">
+          <span class="meta-key">Visibility</span>
+          <span class="meta-val ${product.visible ? 'text-success' : 'text-muted'}">${product.visible ? '● Visible' : '○ Hidden'}</span>
+        </div>
+      `;
+
+      /* Reset edit image input */
+      document.getElementById('editImageInput').value = '';
+      document.getElementById('editImageError').style.display = 'none';
+
+      document.getElementById('editProductModal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeEditModal() {
+      document.getElementById('editProductModal').classList.remove('open');
+      document.body.style.overflow = '';
+      editingProductData = null;
+      editingFile = null;
+    }
+
+    document.getElementById('closeEditModal').addEventListener('click', closeEditModal);
+    document.getElementById('cancelEditBtn').addEventListener('click', closeEditModal);
+    document.getElementById('editProductModal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeEditModal();
+    });
+
+    /* Edit image input */
+    document.getElementById('editImageInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const errEl = document.getElementById('editImageError');
+      const result = await AP.validateImage(file);
+      if (!result.ok) {
+        errEl.textContent = result.error;
+        errEl.style.display = 'block';
+        editingFile = null;
+        e.target.value = '';
+        return;
+      }
+      errEl.style.display = 'none';
+      editingFile = file;
+    });
+
+    /* Edit form submit */
+    document.getElementById('editProductForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!editingProductData) return;
+
+      const title = document.getElementById('editTitle').value.trim();
+      const desc  = document.getElementById('editDesc').value.trim();
+      const url   = document.getElementById('editUrl').value.trim();
+
+      if (!title || !desc || !isValidUrl(url)) {
+        showToast('Please fill in all required fields correctly.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('saveEditBtn');
+      btn.disabled = true;
+      btn.classList.add('loading');
+
+      try {
+        const updates = {
+          title,
+          description: desc,
+          product_url: url,
+        };
+
+        /* Upload new image if provided */
+        if (editingFile) {
+          const newUrl = await AP.uploadImage(editingFile);
+          updates.image_url = newUrl;
+          /* Optionally delete old image — skip for safety */
+        }
+
+        await AP.updateProduct(editingProductData.id, updates);
+        showToast(`"${title}" updated!`, 'success');
+        closeEditModal();
+        await loadProducts();
+      } catch (err) {
+        showToast('Update failed: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+      }
+    });
+
+    /* ─────────────────────────────────────
+       ACCESS PORTAL TAB
+    ───────────────────────────────────── */
+    async function loadMembers() {
+      try {
+        allMembers = await AA.loadAdminProfiles();
+        renderMembersList();
+        updateStats();
+      } catch (err) {
+        showToast('Failed to load members: ' + err.message, 'error');
+      }
+    }
+
+    function renderMembersList() {
+      const container = document.getElementById('membersListContainer');
+
+      if (!allMembers.length) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">👤</div><p>No admin profiles registered yet.</p></div>`;
+        return;
+      }
+
+      const grid = document.createElement('div');
+      grid.className = 'members-grid';
+
+      allMembers.forEach(m => {
+        const card = AA.buildMemberCard(m);
+
+        /* Edit button */
+        const editBtn = card.querySelector('.edit-member');
+        if (editBtn) {
+          editBtn.addEventListener('click', () => openEditMemberModal(m));
+        }
+
+        /* Remove button */
+        const removeBtn = card.querySelector('.remove-member');
+        if (removeBtn) {
+          removeBtn.addEventListener('click', async () => {
+            if (!confirm(`Remove "${m.name || m.email}" from admin profiles?`)) return;
+            try {
+              await AA.removeAdminProfile(m.id);
+              showToast(`${m.name || m.email} removed.`, 'success');
+              await loadMembers();
+            } catch (err) {
+              showToast(err.message, 'error');
+            }
+          });
+        }
+
+        grid.appendChild(card);
+      });
+
+      container.innerHTML = '';
+      container.appendChild(grid);
+    }
+
+    /* Refresh */
+    document.getElementById('refreshMembersBtn').addEventListener('click', loadMembers);
+
+    /* Add member form */
+    document.getElementById('addMemberForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name  = document.getElementById('memberName').value.trim();
+      const email = document.getElementById('memberEmail').value.trim();
+      const role  = document.getElementById('memberRole').value;
+
+      if (!name || !email) { showToast('Name and email are required.', 'error'); return; }
+      if (!isValidEmail(email)) { showToast('Please enter a valid email.', 'error'); return; }
+
+      const btn = document.getElementById('addMemberBtn');
+      btn.disabled = true;
+      btn.classList.add('loading');
+
+      try {
+        /* We don't have the auth user ID here — use email as identifier
+           The admin_profiles.id should match auth.users.id.
+           Since we can't get that without service role, we'll generate
+           a random id; admin must manually link in Supabase if needed,
+           OR look up the user via email (not possible with anon key).
+           Best practice: admin sets id = auth user's UUID manually. */
+        await AA.addAdminProfile({
+          id: crypto.randomUUID(),
+          name,
+          email,
+          role,
+        });
+        showToast(`${name} registered as ${role}.`, 'success');
+        document.getElementById('addMemberForm').reset();
+        await loadMembers();
+      } catch (err) {
+        showToast('Failed: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+      }
+    });
+
+    /* Edit member modal */
+    function openEditMemberModal(member) {
+      document.getElementById('editMemberId').value    = member.id;
+      document.getElementById('editMemberName').value  = member.name || '';
+      document.getElementById('editMemberRole').value  = member.role || 'admin';
+      document.getElementById('editMemberModal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeEditMemberModal() {
+      document.getElementById('editMemberModal').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('closeEditMemberModal').addEventListener('click', closeEditMemberModal);
+    document.getElementById('cancelEditMemberBtn').addEventListener('click', closeEditMemberModal);
+    document.getElementById('editMemberModal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeEditMemberModal();
+    });
+
+    document.getElementById('editMemberForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id   = document.getElementById('editMemberId').value;
+      const name = document.getElementById('editMemberName').value.trim();
+      const role = document.getElementById('editMemberRole').value;
+
+      if (!name) { showToast('Name is required.', 'error'); return; }
+
+      try {
+        await AA.updateAdminProfile(id, { name, role });
+        showToast('Member updated.', 'success');
+        closeEditMemberModal();
+        await loadMembers();
+      } catch (err) {
+        showToast('Update failed: ' + err.message, 'error');
+      }
+    });
+
+    /* ─────────────────────────────────────
+       VISIBILITY TAB
+    ───────────────────────────────────── */
+    function renderVisibilityGrid() {
+      const container = document.getElementById('visibilityGridContainer');
+
+      if (!allProducts.length) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>No projects found.</p></div>`;
+        return;
+      }
+
+      const grid = document.createElement('div');
+      grid.className = 'visibility-grid';
+
+      allProducts.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'vis-card';
+        card.dataset.id = p.id;
+
+        const checkedAttr = p.visible ? 'checked' : '';
+
+        card.innerHTML = `
+          <div class="vis-card-img">
+            <img src="${escapeHtml(p.image_url)}" alt="${escapeHtml(p.title)}" loading="lazy" onerror="this.style.opacity='.2'" />
+          </div>
+          <div class="vis-card-body">
+            <div class="vis-card-title" title="${escapeHtml(p.title)}">${escapeHtml(p.title)}</div>
+            <label class="toggle-switch" title="Toggle visibility" onclick="event.stopPropagation()">
+              <input type="checkbox" ${checkedAttr} class="vis-toggle" data-id="${escapeHtml(p.id)}" />
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        `;
+
+        /* Click card → open edit modal */
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('label') || e.target.closest('input')) return;
+          openEditModal(p);
+        });
+
+        /* Visibility toggle */
+        card.querySelector('.vis-toggle').addEventListener('change', async (e) => {
+          const newVal = e.target.checked;
+          try {
+            await AP.toggleVisibility(p.id, newVal);
+            p.visible = newVal;
+            showToast(`"${p.title}" is now ${newVal ? 'visible' : 'hidden'}.`, 'success');
+            updateStats();
+            /* Sync products list */
+            const prodCard = document.querySelector(`#productsListContainer .product-admin-card[data-id="${p.id}"]`);
+            if (prodCard) {
+              const badge = prodCard.querySelector('.visibility-badge');
+              if (badge) {
+                badge.className = `visibility-badge ${newVal ? 'visible' : 'hidden'}`;
+                badge.textContent = newVal ? '● Visible' : '○ Hidden';
+              }
+              const toggle = prodCard.querySelector('.visibility-toggle');
+              if (toggle) toggle.checked = newVal;
+            }
+          } catch (err) {
+            e.target.checked = !newVal;
+            showToast('Failed: ' + err.message, 'error');
+          }
+        });
+
+        grid.appendChild(card);
+      });
+
+      container.innerHTML = '';
+      container.appendChild(grid);
+    }
+
+    document.getElementById('refreshVisibilityBtn').addEventListener('click', async () => {
+      await loadProducts();
+      renderVisibilityGrid();
+    });
+
+    /* ─────────────────────────────────────
+       UTILITIES
+    ───────────────────────────────────── */
+
+    /** Character counter for text inputs */
+    function initCharCount(inputId, countId, max) {
+      const input = document.getElementById(inputId);
+      const count = document.getElementById(countId);
+      if (!input || !count) return;
+      input.addEventListener('input', () => {
+        const len = input.value.length;
+        count.textContent = `${len} / ${max}`;
+        count.className = `char-count${len > max * 0.9 ? ' warn' : ''}`;
+      });
+    }
+
+    /** Drag-and-drop upload zone */
+    function initUploadZone(zoneId, inputId) {
+      const zone = document.getElementById(zoneId);
+      if (!zone) return;
+
+      zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
+      zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (!file) return;
+        const input = document.getElementById(inputId);
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        input.dispatchEvent(new Event('change'));
+      });
+    }
+
+    /**
+     * Handles file selection: validates and shows preview.
+     * Used for the add product upload zone.
+     */
+    async function handleFileSelect(file, zoneId, previewId, imgId, errorId) {
+      const errEl = document.getElementById(errorId);
+      errEl.style.display = 'none';
+
+      const result = await AP.validateImage(file);
+
+      if (!result.ok) {
+        errEl.textContent = result.error;
+        errEl.style.display = 'block';
+        selectedFile = null;
+        document.getElementById('productImageInput').value = '';
+        return;
+      }
+
+      /* Show preview */
+      const previewUrl = URL.createObjectURL(file);
+      document.getElementById(imgId).src = previewUrl;
+      document.getElementById(previewId).style.display = 'block';
+      document.getElementById(zoneId).style.display = 'none';
+
+      selectedFile = file;
+    }
+
+    /** Basic URL validation */
+    function isValidUrl(str) {
+      try { new URL(str); return true; } catch { return false; }
+    }
+
+    /** Basic email validation */
+    function isValidEmail(str) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str);
+    }
+
+    /** Capitalize first letter */
+    function capitalize(str) {
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+  })();
+  </script>
+</body>
+</html>

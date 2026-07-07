@@ -15,12 +15,13 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap"
     rel="stylesheet" />
-  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="shortcut icon" href="/favicon.ico" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-  <meta name="apple-mobile-web-app-title" content="Rek" />
-  <link rel="manifest" href="/site.webmanifest" />
+  <!-- ── FAVICON: cross-platform support ── -->
+  <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico" />
+  <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-title" content="rek." />
+  <link rel="manifest" href="/favicon/site.webmanifest" />
   <style>
     /* ── RESET & ROOT ── */
     :root {
@@ -83,6 +84,8 @@
         left: 0;
         z-index: 9999;
         pointer-events: none;
+        /* Transform-based positioning eliminates layout reflow */
+        will-change: transform;
       }
 
       .cursor-dot {
@@ -937,6 +940,40 @@
       font-style: italic;
     }
 
+    /* ── PORTFOLIO SKELETON LOADING ── */
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+
+    .portfolio-skeleton .portfolio-preview,
+    .skel-line {
+      background: linear-gradient(90deg, var(--grey-bg) 25%, var(--grey-mid) 50%, var(--grey-bg) 75%);
+      background-size: 800px 100%;
+      animation: shimmer 1.4s infinite linear;
+      border-radius: 6px;
+    }
+
+    .portfolio-skeleton .portfolio-preview {
+      border-radius: 0;
+      animation: shimmer 1.4s infinite linear;
+    }
+
+    /* Empty state for portfolio grid */
+    .portfolio-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--grey-text);
+      font-size: .95rem;
+    }
+
+    .portfolio-empty span {
+      display: block;
+      font-size: 2rem;
+      margin-bottom: .75rem;
+    }
+
     /* ── PRICING ── */
     #pricing {
       background: var(--grey-bg);
@@ -1597,48 +1634,33 @@
         <p class="portfolio-intro">We don't just plan. We build. Here's what we've shipped, and what's next.</p>
       </div>
     </div>
-    <div class="portfolio-grid">
-      <div class="portfolio-card reveal reveal-d1">
-        <div class="portfolio-preview" style="background:linear-gradient(135deg,#c31432,#240b36);">
-          <div class="portfolio-preview-inner"><img src="./images/logo.jpeg" width="300" height="200" alt=""></div>
-          <div class="portfolio-overlay"></div>
-          <div class="portfolio-status">Live</div>
-        </div>
+    <!-- Dynamic portfolio grid: populated by js/portfolio.js from Supabase -->
+    <div id="portfolioGrid" class="portfolio-grid" aria-live="polite" aria-label="Portfolio projects">
+      <!-- Loading skeletons -->
+      <div class="portfolio-card portfolio-skeleton" aria-hidden="true">
+        <div class="portfolio-preview" style="background:var(--grey-bg);"></div>
         <div class="portfolio-body">
-          <p class="portfolio-cat">Website</p>
-          <h3>Chandran Mess</h3>
-          <p>A premium, multilingual website crafted for Madurai's iconic restaurant.</p>
-          <a href="https://chandranmess.online" target="_blank" rel="noopener noreferrer" class="btn-ghost">View Live
-            →</a>
+          <div class="skel-line" style="width:40%;height:10px;margin-bottom:.6rem;"></div>
+          <div class="skel-line" style="width:80%;height:14px;margin-bottom:.4rem;"></div>
+          <div class="skel-line" style="width:65%;height:10px;"></div>
         </div>
       </div>
-      <div class="portfolio-card reveal reveal-d3">
-        <div class="portfolio-preview" style="background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);">
-          <div class="portfolio-preview-inner"><img src="./images/JRC.jpeg" width="300" height="200" alt=""></div>
-          <div class="portfolio-overlay"></div>
-          <div class="portfolio-status">Live</div>
-        </div>
+      <div class="portfolio-card portfolio-skeleton" aria-hidden="true">
+        <div class="portfolio-preview" style="background:var(--grey-bg);"></div>
         <div class="portfolio-body">
-          <p class="portfolio-cat">Automation</p>
-          <h3>JR Consultancy</h3>
-          <p>Automation for tracking clients and contacting.</p>
-          <a href="#contact" class="btn-ghost"> Live →</a>
+          <div class="skel-line" style="width:40%;height:10px;margin-bottom:.6rem;"></div>
+          <div class="skel-line" style="width:80%;height:14px;margin-bottom:.4rem;"></div>
+          <div class="skel-line" style="width:65%;height:10px;"></div>
         </div>
       </div>
-      <div class="portfolio-card reveal reveal-d2">
-        <div class="portfolio-preview" style="background:linear-gradient(135deg,#1a1a2e,#16213e);">
-          <div class="portfolio-preview-inner">🏋️</div>
-          <div class="portfolio-overlay"></div>
-          <div class="portfolio-status">In Progress</div>
-        </div>
+      <div class="portfolio-card portfolio-skeleton" aria-hidden="true">
+        <div class="portfolio-preview" style="background:var(--grey-bg);"></div>
         <div class="portfolio-body">
-          <p class="portfolio-cat">Website</p>
-          <h3>Fitnezz Factory Website</h3>
-          <p>A modern fitness website with booking and membership features.</p>
-          <a href="#contact" class="btn-ghost">Coming Soon →</a>
+          <div class="skel-line" style="width:40%;height:10px;margin-bottom:.6rem;"></div>
+          <div class="skel-line" style="width:80%;height:14px;margin-bottom:.4rem;"></div>
+          <div class="skel-line" style="width:65%;height:10px;"></div>
         </div>
       </div>
-
     </div>
     <p class="portfolio-note reveal">More drops coming soon.</p>
   </section>
@@ -1793,23 +1815,78 @@
 
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
   <script>
-    /* ── CURSOR ── */
+    /* ── CURSOR (optimized: RAF, no layout thrashing, tab-pause) ── */
     if (window.matchMedia('(pointer:fine)').matches) {
-      const dot = document.getElementById('cursorDot');
+      const dot  = document.getElementById('cursorDot');
       const ring = document.getElementById('cursorRing');
       const cRing = document.getElementById('cRing');
-      let mx = 0, my = 0, rx = 0, ry = 0;
-      document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; }, { passive: true });
-      document.querySelectorAll('a,button').forEach(el => {
-        el.addEventListener('mouseenter', () => cRing.classList.add('expand'));
-        el.addEventListener('mouseleave', () => cRing.classList.remove('expand'));
+
+      // Skip heavy animations on very low-end devices
+      const isLowPower = navigator.hardwareConcurrency != null && navigator.hardwareConcurrency <= 2;
+
+      let mx = 0, my = 0;          // raw mouse position
+      let rx = 0, ry = 0;          // smoothed ring position
+      let dirty = false;           // only RAF if mouse actually moved
+      let rafId = null;
+      let paused = false;          // pause when tab is hidden
+
+      // Cache element style references once
+      const dotStyle  = dot.style;
+      const ringStyle = ring.style;
+
+      // Throttle: set flag instead of doing work in every event
+      document.addEventListener('mousemove', e => {
+        mx = e.clientX;
+        my = e.clientY;
+        dirty = true;
+      }, { passive: true });
+
+      // Expand ring on interactive elements
+      document.querySelectorAll('a, button').forEach(el => {
+        el.addEventListener('mouseenter', () => cRing.classList.add('expand'), { passive: true });
+        el.addEventListener('mouseleave', () => cRing.classList.remove('expand'), { passive: true });
       });
-      (function tick() {
-        dot.style.left = mx + 'px'; dot.style.top = my + 'px';
-        rx += (mx - rx) * .12; ry += (my - ry) * .12;
-        ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
-        requestAnimationFrame(tick);
-      })();
+
+      function tick() {
+        if (!paused) {
+          if (dirty || isLowPower) {
+            // Dot: instant follow
+            dotStyle.transform = `translate(${mx}px,${my}px) translate(-50%,-50%)`;
+
+            if (!isLowPower) {
+              // Ring: lerp for smooth lag effect
+              rx += (mx - rx) * 0.12;
+              ry += (my - ry) * 0.12;
+              ringStyle.transform = `translate(${rx}px,${ry}px) translate(-50%,-50%)`;
+            } else {
+              ringStyle.transform = `translate(${mx}px,${my}px) translate(-50%,-50%)`;
+            }
+
+            dirty = false;
+          }
+          rafId = requestAnimationFrame(tick);
+        }
+      }
+
+      // Use transform instead of left/top to avoid layout reflow
+      dotStyle.left  = '0';
+      dotStyle.top   = '0';
+      ringStyle.left = '0';
+      ringStyle.top  = '0';
+
+      // Pause animation loop when tab is not visible
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          paused = true;
+          if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+        } else {
+          paused = false;
+          dirty = true;
+          rafId = requestAnimationFrame(tick);
+        }
+      });
+
+      rafId = requestAnimationFrame(tick);
     }
 
     /* ── NAV SCROLL ── */
@@ -2046,6 +2123,12 @@ void main(){
       requestAnimationFrame(render);
     })();
   </script>
+
+  <!-- Supabase JS client (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <!-- Portfolio dynamic loader: fetches visible products from Supabase -->
+  <script src="/js/config.js"></script>
+  <script src="/js/portfolio.js"></script>
 </body>
 
 </html>
