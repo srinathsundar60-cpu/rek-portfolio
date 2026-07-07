@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate, Link } from 'react-router-dom';
-import { supabase } from '../services/supabase';
+import { supabase, getFriendlyAuthErrorMessage } from '../services/supabase';
 import { useToast } from '../context/ToastContext';
 import '../styles/admin.css';
 
@@ -114,14 +114,7 @@ export const Signup = () => {
 
     } catch (err) {
       setLoading(false);
-      
-      let errorMessage = err.message || 'Registration failed.';
-      if (err.status === 429 || (err.message && err.message.toLowerCase().includes('rate_limit'))) {
-        errorMessage = 'Too many email requests have been made. Please wait a few minutes before trying again.';
-      } else if (err.code === 'over_email_send_rate_limit') {
-        errorMessage = 'Too many email requests have been made. Please wait a few minutes before trying again.';
-      }
-      
+      const errorMessage = getFriendlyAuthErrorMessage(err);
       showToast(errorMessage, 'error');
     }
   };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { supabase, supabaseNoPersist } from '../services/supabase';
+import { supabase, supabaseNoPersist, getFriendlyAuthErrorMessage } from '../services/supabase';
 import { useToast } from '../context/ToastContext';
 
 export const AccessPortal = () => {
@@ -95,12 +95,7 @@ export const AccessPortal = () => {
       loadMembers();
       fetchStats();
     } catch (err) {
-      let errorMessage = err.message || 'Registration failed.';
-      if (err.status === 429 || (err.message && err.message.toLowerCase().includes('rate_limit'))) {
-        errorMessage = 'Too many email requests have been made. Please wait a few minutes before trying again.';
-      } else if (err.code === 'over_email_send_rate_limit') {
-        errorMessage = 'Too many email requests have been made. Please wait a few minutes before trying again.';
-      }
+      const errorMessage = getFriendlyAuthErrorMessage(err);
       showToast('Registration failed: ' + errorMessage, 'error');
     } finally {
       setSubmitting(false);
