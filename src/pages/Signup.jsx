@@ -41,6 +41,8 @@ export const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (loading) return; // Prevent duplicate requests
+
     let valid = true;
     if (!name.trim()) {
       setNameError(true);
@@ -68,11 +70,18 @@ export const Signup = () => {
     setLoading(true);
 
     try {
+      console.log('--- AUTH REQUEST INITIATED: Signup ---');
+      console.log('Timestamp:', new Date().toISOString());
+      console.log('Email:', email);
+
       // 1. Sign up user in Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
+      
+      console.log('--- AUTH REQUEST COMPLETED: Signup ---');
+
       if (error) throw error;
 
       const userId = data.user?.id;
@@ -105,7 +114,15 @@ export const Signup = () => {
 
     } catch (err) {
       setLoading(false);
-      showToast(err.message || 'Registration failed.', 'error');
+      
+      let errorMessage = err.message || 'Registration failed.';
+      if (err.status === 429 || (err.message && err.message.toLowerCase().includes('rate_limit'))) {
+        errorMessage = 'Too many email requests have been made. Please wait a few minutes before trying again.';
+      } else if (err.code === 'over_email_send_rate_limit') {
+        errorMessage = 'Too many email requests have been made. Please wait a few minutes before trying again.';
+      }
+      
+      showToast(errorMessage, 'error');
     }
   };
 

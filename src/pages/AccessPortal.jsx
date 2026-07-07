@@ -42,6 +42,8 @@ export const AccessPortal = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (submitting) return; // Prevent duplicate requests
+
     if (!name || !email || !password) {
       showToast('Please fill out all fields.', 'error');
       return;
@@ -50,10 +52,16 @@ export const AccessPortal = () => {
     setSubmitting(true);
     try {
       // 1. Sign up the user with the secondary client so we don't drop the current session
+      console.log('--- AUTH REQUEST INITIATED: AccessPortal Register ---');
+      console.log('Timestamp:', new Date().toISOString());
+      console.log('Email:', email);
+
       const { data: authData, error: authError } = await supabaseNoPersist.auth.signUp({
         email,
         password,
       });
+
+      console.log('--- AUTH REQUEST COMPLETED: AccessPortal Register ---');
 
       if (authError) throw authError;
       
@@ -87,7 +95,13 @@ export const AccessPortal = () => {
       loadMembers();
       fetchStats();
     } catch (err) {
-      showToast('Registration failed: ' + err.message, 'error');
+      let errorMessage = err.message || 'Registration failed.';
+      if (err.status === 429 || (err.message && err.message.toLowerCase().includes('rate_limit'))) {
+        errorMessage = 'Too many email requests have been made. Please wait a few minutes before trying again.';
+      } else if (err.code === 'over_email_send_rate_limit') {
+        errorMessage = 'Too many email requests have been made. Please wait a few minutes before trying again.';
+      }
+      showToast('Registration failed: ' + errorMessage, 'error');
     } finally {
       setSubmitting(false);
     }

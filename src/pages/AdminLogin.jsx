@@ -39,6 +39,8 @@ export const AdminLogin = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (loading) return; // Prevent duplicate requests
+
     let valid = true;
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setEmailError(true);
@@ -59,7 +61,14 @@ export const AdminLogin = () => {
     setLoading(true);
 
     try {
+      console.log('--- AUTH REQUEST INITIATED: AdminLogin ---');
+      console.log('Timestamp:', new Date().toISOString());
+      console.log('Email:', email);
+
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      console.log('--- AUTH REQUEST COMPLETED: AdminLogin ---');
+
       if (error) throw error;
 
       if (data.session) {
@@ -70,7 +79,15 @@ export const AdminLogin = () => {
       }
     } catch (err) {
       setLoading(false);
-      showToast(err.message || 'Login failed. Please check your credentials.', 'error');
+      
+      let errorMessage = err.message || 'Login failed. Please check your credentials.';
+      if (err.status === 429 || (err.message && err.message.toLowerCase().includes('rate_limit'))) {
+        errorMessage = 'Too many requests have been made. Please wait a few minutes before trying again.';
+      } else if (err.code === 'over_email_send_rate_limit') {
+        errorMessage = 'Too many requests have been made. Please wait a few minutes before trying again.';
+      }
+      
+      showToast(errorMessage, 'error');
     }
   };
 
