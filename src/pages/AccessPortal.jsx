@@ -62,6 +62,11 @@ export const AccessPortal = () => {
       const { data: authData, error: authError } = await supabaseNoPersist.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            name: name
+          }
+        }
       });
 
       console.log('--- AUTH REQUEST COMPLETED: AccessPortal Register ---');
@@ -75,7 +80,7 @@ export const AccessPortal = () => {
          throw new Error("Unable to create user ID. User might already exist or require email confirmation.");
       }
 
-      // 2. Insert into admin_profiles
+      // 2. Insert into admin_profiles (fallback if trigger didn't run, ignoring duplicate key errors)
       const { error: insertError } = await supabase
         .from('admin_profiles')
         .insert([{
@@ -85,8 +90,8 @@ export const AccessPortal = () => {
           role: 'admin'
         }]);
 
-      if (insertError) {
-        // If profile creation fails, they will exist in Auth but not in profiles.
+      if (insertError && insertError.code !== '23505') {
+        // If profile creation fails due to some other error, they will exist in Auth but not in profiles.
         throw insertError;
       }
 

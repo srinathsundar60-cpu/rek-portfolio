@@ -81,6 +81,11 @@ export const Signup = () => {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            name: name
+          }
+        }
       });
       
       console.log('--- AUTH REQUEST COMPLETED: Signup ---');
@@ -92,18 +97,20 @@ export const Signup = () => {
         throw new Error('Registration failed. Check if account already exists.');
       }
 
-      // 2. Add profile to admin_profiles table
-      const { error: profileError } = await supabase
-        .from('admin_profiles')
-        .insert([{
-          id: userId,
-          name,
-          email,
-          role: 'admin'
-        }]);
+      // 2. Add profile to admin_profiles table (Only if user has an active session, otherwise DB trigger handles it)
+      if (data.session) {
+        const { error: profileError } = await supabase
+          .from('admin_profiles')
+          .insert([{
+            id: userId,
+            name,
+            email,
+            role: 'admin'
+          }]);
 
-      if (profileError) {
-        throw profileError;
+        if (profileError && profileError.code !== '23505') {
+          throw profileError;
+        }
       }
 
       showToast('Registration successful! Redirecting to login.', 'success');
