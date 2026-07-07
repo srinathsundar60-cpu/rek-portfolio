@@ -4,13 +4,15 @@ import { supabase } from '../services/supabase';
 import { useToast } from '../context/ToastContext';
 import '../styles/admin.css';
 
-export const AdminLogin = () => {
+export const Signup = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [sessionLoading, setSessionLoading] = useState(true);
   const [session, setSession] = useState(null);
-  
+
+  const [nameError, setNameError] = useState(false);
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
 
@@ -40,6 +42,13 @@ export const AdminLogin = () => {
     e.preventDefault();
 
     let valid = true;
+    if (!name.trim()) {
+      setNameError(true);
+      valid = false;
+    } else {
+      setNameError(false);
+    }
+
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setEmailError(true);
       valid = false;
@@ -47,7 +56,7 @@ export const AdminLogin = () => {
       setEmailError(false);
     }
 
-    if (!password) {
+    if (!password || password.length < 6) {
       setPasswordError(true);
       valid = false;
     } else {
@@ -59,18 +68,44 @@ export const AdminLogin = () => {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      // 1. Sign up user in Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
       if (error) throw error;
 
-      if (data.session) {
-        showToast('Login successful! Redirecting.', 'success');
-        setTimeout(() => {
-          navigate('/admin/dashboard');
-        }, 800);
+      const userId = data.user?.id;
+      if (!userId) {
+        throw new Error('Registration failed. Check if account already exists.');
       }
+
+      // 2. Add profile to admin_profiles table
+      const { error: profileError } = await supabase
+        .from('admin_profiles')
+        .insert([{
+          id: userId,
+          name,
+          email,
+          role: 'admin'
+        }]);
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      showToast('Registration successful! Redirecting to login.', 'success');
+      
+      // Auto signout just in case Supabase auto-logged them in, so they can sign in cleanly
+      await supabase.auth.signOut();
+      
+      setTimeout(() => {
+        navigate('/admin/login');
+      }, 1500);
+
     } catch (err) {
       setLoading(false);
-      showToast(err.message || 'Login failed. Please check your credentials.', 'error');
+      showToast(err.message || 'Registration failed.', 'error');
     }
   };
 
@@ -128,8 +163,24 @@ export const AdminLogin = () => {
             display: none;
           }
 
-           .field-error.show { display: block; }
-           .login-links a:hover { color: var(--orange) !important; }
+          .field-error.show { display: block; }
+          
+          .login-links {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+          }
+          
+          .login-links a {
+            color: var(--grey-text);
+            text-decoration: none;
+            transition: color 0.2s;
+          }
+          
+          .login-links a:hover {
+            color: var(--orange);
+          }
         `}
       </style>
       
@@ -138,16 +189,35 @@ export const AdminLogin = () => {
       <div className="login-page">
         <div className="login-card">
           <div className="login-logo">rek<span>.</span></div>
-          <p className="login-subtitle">Admin Portal - Sign in to continue</p>
+          <p className="login-subtitle">Create Admin Account</p>
 
-          <form className="login-form" id="loginForm" noValidate onSubmit={handleSubmit}>
+          <form className="login-form" id="signupForm" noValidate onSubmit={handleSubmit}>
             <div className="form-group">
-              <label htmlFor="adminEmail">Email</label>
+              <label htmlFor="adminName">Full Name</label>
+              <input
+                type="text"
+                id="adminName"
+                name="name"
+                placeholder="Your name"
+                required
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (nameError) setNameError(false);
+                }}
+              />
+              <span className={`field-error ${nameError ? 'show' : ''}`} id="nameError">
+                Please enter your name.
+              </span>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="adminEmail">Email Address</label>
               <input
                 type="email"
                 id="adminEmail"
                 name="email"
-                placeholder="admin@example.com"
+                placeholder="you@example.com"
                 autoComplete="email"
                 required
                 value={email}
@@ -167,8 +237,8 @@ export const AdminLogin = () => {
                 type="password"
                 id="adminPassword"
                 name="password"
-                placeholder="••••••••"
-                autoComplete="current-password"
+                placeholder="At least 6 characters"
+                autoComplete="new-password"
                 required
                 value={password}
                 onChange={(e) => {
@@ -177,19 +247,19 @@ export const AdminLogin = () => {
                 }}
               />
               <span className={`field-error ${passwordError ? 'show' : ''}`} id="passwordError">
-                Password cannot be empty.
+                Password must be at least 6 characters.
               </span>
             </div>
 
-            <button type="submit" className={`btn-login ${loading ? 'loading' : ''}`} id="loginBtn" disabled={loading}>
-              {loading ? '' : 'Sign In →'}
+            <button type="submit" className={`btn-login ${loading ? 'loading' : ''}`} id="signupBtn" disabled={loading}>
+              {loading ? '' : 'Sign Up →'}
             </button>
           </form>
 
-            <div className="login-links" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem', fontSize: '0.85rem' }}>
-              <Link to="/signup" style={{ color: 'var(--grey-text)', textDecoration: 'none', transition: 'color 0.2s' }}>Don't have an account? Sign Up</Link>
-              <a href="/" style={{ color: 'var(--grey-text)', textDecoration: 'none', transition: 'color 0.2s' }}>← Home</a>
-            </div>
+          <div className="login-links">
+            <Link to="/signin">Already have an account? Sign In</Link>
+            <a href="/">← Home</a>
+          </div>
         </div>
       </div>
     </>

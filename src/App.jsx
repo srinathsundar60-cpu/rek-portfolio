@@ -10,6 +10,7 @@ import { Home } from './pages/Home';
 // Admin Layout & Pages
 import { AdminLayout } from './layouts/AdminLayout';
 import { AdminLogin } from './pages/AdminLogin';
+import { Signup } from './pages/Signup';
 import { Dashboard } from './pages/Dashboard';
 import { Products } from './pages/Products';
 import { Visibility } from './pages/Visibility';
@@ -33,6 +34,8 @@ export const App = () => {
           
           {/* Admin Authentication */}
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/signin" element={<AdminLogin />} />
+          <Route path="/signup" element={<Signup />} />
           
           {/* Protected Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
