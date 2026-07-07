@@ -106,12 +106,12 @@ export const Hero = () => {
       <canvas ref={canvasRef} className="hero-smoke-canvas" id="heroSmokeCanvas"></canvas>
       <div className="hero-smoke-overlay"></div>
       <div className="hero-content">
-        <div className="hero-badge">Websites · Apps · Automations</div>
-        <h1 className="hero-title">Build <em>smarter.</em><br />Launch <em>faster.</em></h1>
-        <p className="hero-sub">Crafting high-performance digital experiences without burning your budget.</p>
+        <div className="hero-badge">Student-led startup · Madurai</div>
+        <h1 className="hero-title">Build smarter.<br /><em>Launch faster.</em></h1>
+        <p className="hero-sub">Websites, apps, and automations crafted with precision — without burning your budget.</p>
         <div className="hero-btns">
-          <a href="#contact" className="btn-primary">Start a Project →</a>
-          <a href="#work" className="btn-secondary">View Work</a>
+          <a href="#work" className="btn-primary">View Work →</a>
+          <a href="#contact" className="btn-secondary">Get Started</a>
         </div>
       </div>
     </section>

@@ -127,15 +127,15 @@ export const Portfolio = () => {
   }, []);
 
   return (
-    <section id="work" className="section bg-black" style={{ padding: '0', overflow: 'hidden' }}>
-      <div className="work-hero reveal js-reveal">
+    <section id="work">
+      <div className="work-hero reveal">
         <canvas ref={canvasRef} id="workShadowCanvas" className="work-hero-canvas" aria-hidden="true"></canvas>
         <div className="work-hero-mask"></div>
         <div className="work-hero-noise"></div>
         <div className="work-hero-content">
           <span className="section-label">Portfolio</span>
-          <h2 className="section-title">What we build.</h2>
-          <p className="portfolio-intro">We don't just plan. We build. Here's what we've shipped, and what's next.</p>
+          <h2 className="section-title" style={{ color: 'var(--white)', marginBottom: '0' }}>Featured Work.</h2>
+          <p className="portfolio-intro">A selection of recent projects built by the rek team. Web apps, marketing sites, and bespoke tools.</p>
         </div>
       </div>
 
@@ -160,21 +160,44 @@ export const Portfolio = () => {
             </div>
           </>
         ) : products.length > 0 ? (
-          products.map((product) => (
-            <a key={product.id} href={product.product_url} target="_blank" rel="noopener noreferrer" className="portfolio-card fade-up">
-              <div className="portfolio-preview">
-                <img src={product.image_url} alt={`${product.title} preview`} loading="lazy" />
+          products.map((product, index) => {
+            const delay = ['reveal-d1', 'reveal-d2', 'reveal-d3', 'reveal-d4'][index % 4];
+            return (
+              <div key={product.id} className={`portfolio-card reveal ${delay}`}>
+                <div className="portfolio-preview" style={{ background: 'linear-gradient(135deg,#1a1a1a,#2a2a2a)' }}>
+                  <div className="portfolio-preview-inner">
+                    <img
+                      src={product.image_url}
+                      alt={product.title}
+                      width="400"
+                      height="225"
+                      loading="lazy"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  </div>
+                  <div className="portfolio-overlay"></div>
+                  <div className="portfolio-status">Live</div>
+                </div>
+                <div className="portfolio-body">
+                  <p className="portfolio-cat">Project</p>
+                  <h3>{product.title}</h3>
+                  <p>{product.description}</p>
+                  {product.product_url && (
+                    <a
+                      href={product.product_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-ghost"
+                    >View Project ↗</a>
+                  )}
+                </div>
               </div>
-              <div className="portfolio-body">
-                <div className="portfolio-title">{product.title}</div>
-                <p className="portfolio-desc">{product.description}</p>
-                <div className="portfolio-link">View Project →</div>
-              </div>
-            </a>
-          ))
+            );
+          })
         ) : (
           <div className="portfolio-empty">
-            <p>No visible projects found.</p>
+            <p>Projects coming soon - check back soon!</p>
           </div>
         )}
       </div>

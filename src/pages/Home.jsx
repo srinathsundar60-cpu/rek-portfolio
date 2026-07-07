@@ -8,6 +8,7 @@ import { Pricing } from '../components/Pricing/Pricing';
 import { Contact } from '../components/Contact/Contact';
 import { Footer } from '../components/Footer/Footer';
 import { Cursor } from '../components/Cursor/Cursor';
+import { Why } from '../components/Why/Why';
 
 export const Home = () => {
   // Scroll reveal setup
@@ -53,6 +54,7 @@ export const Home = () => {
         <Services />
         <Portfolio />
         <Pricing />
+        <Why />
         <Contact />
       </main>
       <Footer />

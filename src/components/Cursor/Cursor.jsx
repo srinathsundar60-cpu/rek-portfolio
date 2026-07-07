@@ -42,15 +42,15 @@ export const Cursor = () => {
       if (!paused) {
         if (dirty || isLowPower) {
           // Dot: instant follow
-          dotStyle.transform = `translate(${mx}px,${my}px) translate(-50%,-50%)`;
+          dotStyle.transform = `translate(${mx}px,${my}px)`;
 
           if (!isLowPower) {
             // Ring: lerp for smooth lag effect
             rx += (mx - rx) * 0.12;
             ry += (my - ry) * 0.12;
-            ringStyle.transform = `translate(${rx}px,${ry}px) translate(-50%,-50%)`;
+            ringStyle.transform = `translate(${rx}px,${ry}px)`;
           } else {
-            ringStyle.transform = `translate(${mx}px,${my}px) translate(-50%,-50%)`;
+            ringStyle.transform = `translate(${mx}px,${my}px)`;
           }
 
           dirty = false;
@@ -108,9 +108,11 @@ export const Cursor = () => {
 
   return (
     <>
-      <div className="cursor-dot" id="cursorDot" ref={dotRef}></div>
-      <div className="cursor-ring" id="cursorRing" ref={ringRef}>
-        <div className="c-ring" id="cRing" ref={cRingRef}></div>
+      <div className="cursor" id="cursorDot" aria-hidden="true" ref={dotRef}>
+        <div className="cursor-dot"></div>
+      </div>
+      <div className="cursor" id="cursorRing" aria-hidden="true" ref={ringRef}>
+        <div className="cursor-ring" id="cRing" ref={cRingRef}></div>
       </div>
     </>
   );

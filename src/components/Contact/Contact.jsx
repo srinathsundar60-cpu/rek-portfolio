@@ -2,31 +2,36 @@ import React from 'react';
 
 export const Contact = () => {
   return (
-    <section id="contact" className="section bg-grey" style={{ borderTop: '1px solid var(--grey-mid)' }}>
-      <div className="contact-wrap">
-        <div className="section-head reveal reveal-d1" style={{ maxWidth: '600px', margin: '0' }}>
-          <div className="section-label">Get in Touch</div>
-          <h2>Ready to build something great?</h2>
-          <p style={{ marginTop: '1rem', color: 'var(--grey-text)', fontSize: '1.1rem', lineHeight: '1.6' }}>
-            Whether you have a fully fleshed out project spec or just an idea, we'd love to hear about it.
-          </p>
+    <section id="contact">
+      <div className="contact-grid">
+        <div className="contact-info reveal">
+          <span className="section-label">Contact</span>
+          <h2 className="contact-headline">Got an <em>idea?</em></h2>
+          <p className="contact-sub">Let's turn it into something real.</p>
+          <div className="contact-socials">
+            <a href="https://wa.me/919488125235" className="contact-link" target="_blank" rel="noopener noreferrer">
+              <span>💬</span> WhatsApp Us
+            </a>
+            <a href="https://instagram.com/rek.solutions" className="contact-link" target="_blank" rel="noopener noreferrer">
+              <span>📸</span> @rek.solutions on Instagram
+            </a>
+          </div>
         </div>
-        <div className="contact-methods reveal reveal-d2">
-          <a href="mailto:hello@rek.in" className="contact-box">
-            <div className="c-icon">✉️</div>
-            <div className="c-text">
-              <div className="c-title">Email Us</div>
-              <div className="c-val">hello@rek.in</div>
-            </div>
-          </a>
-          <a href="https://wa.me/919488125235" target="_blank" rel="noopener noreferrer" className="contact-box">
-            <div className="c-icon">💬</div>
-            <div className="c-text">
-              <div className="c-title">WhatsApp</div>
-              <div className="c-val">+91 94881 25235</div>
-            </div>
-          </a>
-        </div>
+        <form action="https://formspree.io/f/mreopqgl" method="POST" className="contact-form reveal reveal-d2" id="contactForm">
+          <div className="form-group">
+            <label htmlFor="cname">Name</label>
+            <input type="text" id="cname" name="name" placeholder="Your name" autoComplete="name" required />
+          </div>
+          <div className="form-group">
+            <label htmlFor="cemail">Email</label>
+            <input type="email" id="cemail" name="email" placeholder="you@email.com" autoComplete="email" required />
+          </div>
+          <div className="form-group">
+            <label htmlFor="cidea">Project Idea</label>
+            <textarea id="cidea" name="message" placeholder="Tell us what you want to build..." required></textarea>
+          </div>
+          <button type="submit" className="btn-submit" id="submitBtn">Start a Project →</button>
+        </form>
       </div>
     </section>
   );

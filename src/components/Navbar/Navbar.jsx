@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { LOGO_BASE64 } from '../../assets/logoBase64';
 
 export const Navbar = () => {
@@ -56,6 +57,7 @@ export const Navbar = () => {
           <li><a href="#pricing">Pricing</a></li>
           <li><a href="#why">Why Us</a></li>
           <li><a href="#contact" className="nav-cta">Start a Project</a></li>
+          <li><Link to="/signin" className="nav-cta" style={{ background: 'transparent', border: '1px solid var(--grey-mid)', color: 'var(--black)' }}>Sign In</Link></li>
         </ul>
 
         {/* Mobile Hamburger Button */}
@@ -81,6 +83,7 @@ export const Navbar = () => {
         <a href="#pricing" onClick={handleNavLinkClick}>Pricing</a>
         <a href="#why" onClick={handleNavLinkClick}>Why Us</a>
         <a href="#contact" onClick={handleNavLinkClick}>Start a Project</a>
+        <Link to="/signin" onClick={handleNavLinkClick}>Sign In</Link>
       </div>
     </>
   );
