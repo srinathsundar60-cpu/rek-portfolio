@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { supabase, getFriendlyAuthErrorMessage } from '../services/supabase';
 import { useToast } from '../context/ToastContext';
@@ -13,6 +13,8 @@ export const AdminLogin = () => {
   
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
+
+  const submittingRef = useRef(false);
 
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -39,7 +41,7 @@ export const AdminLogin = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (loading) return; // Prevent duplicate requests
+    if (loading || submittingRef.current) return; // Prevent duplicate requests
 
     let valid = true;
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -58,6 +60,7 @@ export const AdminLogin = () => {
 
     if (!valid) return;
 
+    submittingRef.current = true;
     setLoading(true);
 
     try {
@@ -78,9 +81,14 @@ export const AdminLogin = () => {
         }, 800);
       }
     } catch (err) {
-      setLoading(false);
       const errorMessage = getFriendlyAuthErrorMessage(err);
       showToast(errorMessage, 'error');
+      
+      // Delay releasing the lock to prevent immediate click spamming
+      setTimeout(() => {
+        submittingRef.current = false;
+        setLoading(false);
+      }, 1000);
     }
   };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { supabase, supabaseNoPersist, getFriendlyAuthErrorMessage } from '../services/supabase';
 import { useToast } from '../context/ToastContext';
@@ -15,6 +15,8 @@ export const AccessPortal = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -42,13 +44,14 @@ export const AccessPortal = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (submitting) return; // Prevent duplicate requests
+    if (submitting || submittingRef.current) return; // Prevent duplicate requests
 
     if (!name || !email || !password) {
       showToast('Please fill out all fields.', 'error');
       return;
     }
 
+    submittingRef.current = true;
     setSubmitting(true);
     try {
       // 1. Sign up the user with the secondary client so we don't drop the current session
@@ -94,11 +97,19 @@ export const AccessPortal = () => {
       
       loadMembers();
       fetchStats();
+      
+      // Reset immediately on success
+      submittingRef.current = false;
+      setSubmitting(false);
     } catch (err) {
       const errorMessage = getFriendlyAuthErrorMessage(err);
       showToast('Registration failed: ' + errorMessage, 'error');
-    } finally {
-      setSubmitting(false);
+      
+      // Delay releasing the lock to prevent immediate click spamming
+      setTimeout(() => {
+        submittingRef.current = false;
+        setSubmitting(false);
+      }, 1000);
     }
   };
 

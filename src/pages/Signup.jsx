@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { supabase, getFriendlyAuthErrorMessage } from '../services/supabase';
 import { useToast } from '../context/ToastContext';
@@ -15,6 +15,8 @@ export const Signup = () => {
   const [nameError, setNameError] = useState(false);
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
+
+  const submittingRef = useRef(false);
 
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -41,7 +43,7 @@ export const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (loading) return; // Prevent duplicate requests
+    if (loading || submittingRef.current) return; // Prevent duplicate requests
 
     let valid = true;
     if (!name.trim()) {
@@ -67,6 +69,7 @@ export const Signup = () => {
 
     if (!valid) return;
 
+    submittingRef.current = true;
     setLoading(true);
 
     try {
@@ -113,9 +116,14 @@ export const Signup = () => {
       }, 1500);
 
     } catch (err) {
-      setLoading(false);
       const errorMessage = getFriendlyAuthErrorMessage(err);
       showToast(errorMessage, 'error');
+      
+      // Delay releasing the lock to prevent immediate click spamming
+      setTimeout(() => {
+        submittingRef.current = false;
+        setLoading(false);
+      }, 1000);
     }
   };
 
